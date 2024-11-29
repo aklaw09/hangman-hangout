@@ -1,5 +1,6 @@
 const {randomUUID} = require('crypto');
 const { createGame, findGameUsingID, updateGame, getAllActiveGames } = require('../model/game');
+const { getIO } = require('../config/socket');
 
 let ActiveGames = [];
 const RUNNING = 1, OVER = 0, WON = 2;
@@ -16,7 +17,9 @@ async function initialise (req, res) {
         }
         await createGame(game);
         delete game.word;
-        res.status(201).json(game)    
+        res.status(201).json(game) 
+        const io = getIO();
+        io.to(game["_id"]).emit("game:start", game);       
     } catch (error) {
         console.error(error)
         res.status(500)
@@ -24,8 +27,10 @@ async function initialise (req, res) {
 }
 
 async function handleGuess (req, res) {
-    const {id, guess} = req.body;   let gameStatus = RUNNING, correctGuess = false;
+    const {id, guess} = req.body;   let correctGuess = false, event = "game:update";
     const game = await findGameUsingID(id);
+    const gameId = game["_id"].toString();
+    const io = getIO();
 
     if(!game) {
         res.status(404).json({message: "Error! Game not found"});
@@ -39,15 +44,21 @@ async function handleGuess (req, res) {
                 }
                 if(i === game.word.length - 1 && !correctGuess) {
                     game.turns--;
-                    if(game.turns === 0) game.status = OVER;
+                    if(game.turns === 0) {
+                        game.status = OVER;
+                        event = "game:end";
+                    }
                 }
             }
             game.display = game.display.join("");
             if(game.word === game.display) {
                 game.status = WON;
+                event = "game:win";
             }
             await updateGame(game);
             res.status(200).json(game);
+            
+            io.to(gameId).emit(event, game);
         } catch (error) {
             console.error(error);
             res.status(500).json(error)

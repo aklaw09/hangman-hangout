@@ -1,11 +1,17 @@
-function handleConnection (socket) {
-    console.log("a user connected!")
+const { getAllActiveGames } = require("../model/game");
+const { initialise } = require("./game");
 
-    socket.on('join', (options) => {
-        const {UserID, Room} = options;
-    });
+async function handleConnection (socket) {
+    console.log("a user connected!", socket.id);
 
-    socket.on('create', console.log);
+    const activeGames = await getAllActiveGames();
+    socket.emit("init", JSON.stringify(activeGames));
+
+    socket.on('join', ({id}) => {
+      socket.join(id);
+      console.log(`Joined room ${id}`);
+      socket.emit("ack", `Watching game ${id}`)
+    })
 
     socket.on('disconnect', () => {
         console.log('user disconnected');

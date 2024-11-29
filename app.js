@@ -5,10 +5,11 @@ const socketio = require("socket.io");
 const authRoutes = require('./routes/auth');
 const protectedRoutes = require('./routes/protected');
 const handleConnection = require('./controller/socket');
+const { init } = require('./config/socket');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketio(server);
+const io = init(server);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
