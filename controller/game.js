@@ -1,58 +1,72 @@
 const {randomUUID} = require('crypto');
+const { createGame, findGameUsingID, updateGame, getAllActiveGames } = require('../model/game');
 
 let ActiveGames = [];
 const RUNNING = 1, OVER = 0, WON = 2;
 
 async function initialise (req, res) {
     // const [RandWord] = (await axios.get("http://random-word-api.herokuapp.com/word")).data;
-    const RandWord = "test"
-    const WordID = randomUUID();
-    ActiveGames[WordID] = {
-        Word: RandWord,
-        TurnsLeft: 6,
-        Display: Array(RandWord.length).fill('_').join("")
-    };
-    res.send({
-        id: WordID,
-        word: ActiveGames[WordID].Display,
-        turns: ActiveGames[WordID].TurnsLeft,
-        gameStatus: RUNNING
-    });
+    try {
+        const RandWord = "test"
+        const game = {
+            word: RandWord,
+            turns: 6,
+            status: RUNNING,
+            display: Array(RandWord.length).fill('_').join("")
+        }
+        await createGame(game);
+        delete game.word;
+        res.status(201).json(game)    
+    } catch (error) {
+        console.error(error)
+        res.status(500)
+    }
 }
 
-function handleGuess (req, res) {
+async function handleGuess (req, res) {
     const {id, guess} = req.body;   let gameStatus = RUNNING, correctGuess = false;
-    if(ActiveGames[id]) {
-        let word = ActiveGames[id].Word;
-        for(let i = 0; i < word.length; i++) {
-            if(word[i] === guess)  {
-                correctGuess = true;
-                let updateDisplay = ActiveGames[id].Display.split("");
-                updateDisplay[i] = guess;
-                ActiveGames[id].Display = updateDisplay.join("");
-                console.log(i, ActiveGames[id].Display, updateDisplay)
+    const game = await findGameUsingID(id);
+
+    if(!game) {
+        res.status(404).json({message: "Error! Game not found"});
+    } else {
+        try {
+            const word = game.word; game.display = game.display.split("");
+            for(let i=0; i < word.length; i++) {
+                if(word[i] === guess) {
+                    correctGuess = true;
+                    game.display[i] = guess;
+                }
+                if(i === game.word.length - 1 && !correctGuess) {
+                    game.turns--;
+                    if(game.turns === 0) game.status = OVER;
+                }
             }
+            game.display = game.display.join("");
+            if(game.word === game.display) {
+                game.status = WON;
+            }
+            await updateGame(game);
+            res.status(200).json(game);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json(error)
         }
-        if(!correctGuess) ActiveGames[id].TurnsLeft--;
-        if (ActiveGames[id].Display === word){
-            gameStatus = WON;
-        } else if(ActiveGames[id].TurnsLeft === 0) gameStatus = OVER;
-        res.send({
-            status: 200,
-            id: id,
-            word: ActiveGames[id].Display,
-            turns: ActiveGames[id].TurnsLeft,
-            gameStatus: gameStatus
-        });
     }
-    else {
-        res.send({
-            status: 404
-        })
+}
+
+async function activeGames (req, res) {
+    try {
+        const activeGames = await getAllActiveGames();
+        res.status(200).json(activeGames);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message: error});
     }
 }
 
 module.exports = {
     initialise,
-    handleGuess
+    handleGuess,
+    activeGames
 }
