@@ -4,10 +4,12 @@ const router = express.Router();
 const game = require("../controller/game")
 const room = require("../controller/room")
 
-router.get('/game/create', game.initialise);
-router.get('/games', game.activeGames);
+router.post('/game/create', game.initialise);
+router.get('/game', game.activeGames);
 router.post('/game', game.handleGuess);
-router.get('/rooms', room.listCurrent);
+router.post('/room/create', authenticateToken, room.initialise);
+router.post('/room/join', authenticateToken,  room.join)
+router.get('/room', room.listCurrent);
 
 
 module.exports = router;
