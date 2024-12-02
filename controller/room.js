@@ -40,23 +40,6 @@ async function initialise (req, res) {
     }
 }
 
-async function join (req, res) {
-    try {
-        const {roomId, password} = req.body;
-        const {username} = req.user;
-
-        if(await authenticRoomPassword(roomId, password)) {
-            const document = await addPlayerToRoom(roomId, username);
-            res.status(200).json(document);
-        } else {
-            throw new Error("Invalid credential")
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json(error);
-    }
-}
-
 async function start (req, res) {
     try {
         const DEFAULT_GUESS_LIMIT = 6;
@@ -90,6 +73,5 @@ async function start (req, res) {
 module.exports = {
     listCurrent,
     initialise,
-    join,
     start
 }
