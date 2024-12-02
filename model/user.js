@@ -6,7 +6,8 @@ async function addUser(document) {
         const users = db.collection("users");
         users.insertOne(document)    
     } catch (error) {
-        console.error(error)
+        console.error(error);
+        throw new Error(error);
     }
 }
 
@@ -16,7 +17,8 @@ async function findUserByUsername(username) {
         const users = db.collection("users");
         return (await users.find({"username" : username}).toArray())[0];
     } catch (error) {
-        console.error(error)
+        console.error(error);
+        throw new Error(error);
     }
 }
 

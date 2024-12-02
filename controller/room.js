@@ -1,5 +1,7 @@
 const { getDB, connectToDB } = require("../config/db");
-const { authenticRoomPassword, createRoom, getAllActiveRooms, addPlayerToRoom } = require("../model/room");
+const { getIO } = require("../config/socket");
+const { createGame } = require("../model/game");
+const { authenticRoomPassword, createRoom, getAllActiveRooms, addPlayerToRoom, findRoomUsingId } = require("../model/room");
 
 
 async function listCurrent (req, res) {
@@ -14,7 +16,8 @@ async function listCurrent (req, res) {
 async function initialise (req, res) {
     try {
         const {hasPassword, password} = req.body;
-        const document = {
+        const {username} = req.user;
+        let document = {
             players: [username],
             gameMaster: username,
             password: password,
@@ -23,11 +26,12 @@ async function initialise (req, res) {
         document = await createRoom(document);
         res.status(201).json(document);
     } catch (error) {
+        console.error(error);
         res.status(500).json(error);
     }
 }
 
-async function join (req, res) {console.log("Joing room")
+async function join (req, res) {
     try {
         const {roomId, password} = req.body;
         const {username} = req.user;
@@ -44,8 +48,40 @@ async function join (req, res) {console.log("Joing room")
     }
 }
 
+async function start (req, res) {
+    try {
+        const DEFAULT_GUESS_LIMIT = 6, RUNNING = 1;
+        let {roomId, systemGenerated, guessLimit, word} = req.body;
+        const {username} = req.user;
+
+        const room = await findRoomUsingId(roomId);
+        if(room.gameMaster !== username) {
+            return res.status(401).json({message: "Unauthorized! Only the game master can start the game."});
+        }
+        if(systemGenerated) word = "test";
+        if(!guessLimit) guessLimit = DEFAULT_GUESS_LIMIT;
+        const game = {
+            word: word,
+            turns: guessLimit,
+            status: RUNNING,
+            display: Array(word.length).fill('_').join("")
+        }
+        await createGame(game);
+        console.log(game);
+        delete game.word;
+        const io = getIO();
+        io.to(roomId).emit("game:start", game);
+
+        res.status(201).json(game) 
+    } catch (error) {
+        console.error(error);
+        res.status(500).json(error);
+    }
+}
+
 module.exports = {
     listCurrent,
     initialise,
-    join
+    join,
+    start
 }

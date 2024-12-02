@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const socketio = require("socket.io");
 const authRoutes = require('./routes/auth');
 const protectedRoutes = require('./routes/protected');
-const handleConnection = require('./controller/socket');
+const {handleConnection} = require('./controller/socket');
 const { init } = require('./config/socket');
 
 const app = express();

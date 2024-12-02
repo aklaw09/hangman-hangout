@@ -43,7 +43,7 @@ async function loginUser(req, res) {
     res.json({ token });
 }
 
-function authenticateToken(req, res, next) {
+async function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -51,13 +51,23 @@ function authenticateToken(req, res, next) {
         return res.status(401).json({ message: "Access denied" });
     }
 
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) {
-            return res.status(403).json({ message: "Invalid token" });
-        }
-        req.user = user;
+    try {
+        req.user = await verify(token);
         next();
-    });
+    } catch (error) {
+        return res.status(401).json({message: "Invalid token"})
+    }
 }
 
-module.exports = { registerUser, loginUser, authenticateToken };
+function verify (token) {
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, SECRET_KEY, (error, user) => {
+            if(error) {
+                reject(error);
+            }
+            resolve(user);
+        });
+    })
+}
+
+module.exports = { registerUser, loginUser, authenticateToken, verify };

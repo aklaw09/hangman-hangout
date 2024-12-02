@@ -4,10 +4,23 @@ const { getDB } = require("../config/db");
 async function createRoom (document) {
     try {
         const db = await getDB();
-        const rooms = db.collections("rooms");
+        const rooms = db.collection("rooms");
         await rooms.insertOne(document);
         delete document.password;
         return document;
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+
+async function findRoomUsingId (roomId) {
+    try {
+        const db = await getDB();
+        const rooms = db.collection("rooms");
+        const objId = ObjectId.createFromHexString(roomId)
+        let roomData = (await rooms.find({"_id": objId}).toArray())[0];
+        delete roomData.password;
+        return roomData;
     } catch (error) {
         throw new Error(error);
     }
@@ -50,8 +63,10 @@ async function addPlayerToRoom (id, username) {
         const rooms = db.collection("rooms");
         const objId = ObjectId.createFromHexString(id)
         const document = (await rooms.find({"_id" : objId}).toArray())[0];
+        if(!document.players.find((players) => players === username)) {
+            document.players.push(username);
+        }
         delete document.password;
-        document.players.push(username);
         const res = await rooms.updateOne({"_id" : id}, {"$set" : document});
         console.log(res);
         return document;
@@ -65,5 +80,6 @@ module.exports = {
     createRoom,
     getAllActiveRooms,
     authenticRoomPassword,
-    addPlayerToRoom
+    addPlayerToRoom,
+    findRoomUsingId
 }

@@ -6,6 +6,7 @@ async function createGame (document) {
         const db = await getDB();
         const games = db.collection("games");
         const res = await games.insertOne(document);
+        console.log(res);
     } catch (error) {
         throw new Error(error)
     }
@@ -37,7 +38,7 @@ async function getAllActiveGames (document) {
     try {
         const db = await getDB();
         const games = db.collection("games");
-        return (await games.find({status: 1}).toArray());
+        return (await games.find({status: "running"}).toArray());
     } catch (error) {
         throw new Error(error)
     }
