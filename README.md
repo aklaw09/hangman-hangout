@@ -1,1 +1,8 @@
-# hangman-hangout
+# Hang-out
+
+```js
+npm install
+npm start
+````
+
+***

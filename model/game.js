@@ -4,9 +4,9 @@ const { getDB } = require("../config/db");
 async function createGame (document) {
     try {
         const db = await getDB();
-        const games = db.collection("games");
+        const games = db.collection("sgames");
         const res = await games.insertOne(document);
-        console.log(res);
+        return res.insertedId.toString();
     } catch (error) {
         throw new Error(error)
     }
@@ -15,7 +15,7 @@ async function createGame (document) {
 async function findGameUsingID (id) {
     try {
         const db = await getDB();
-        const games = db.collection("games");
+        const games = db.collection("sgames");
         const objId = ObjectId.createFromHexString(id)
         const game = (await games.find({"_id": objId}).toArray())[0];
         return game;
@@ -27,8 +27,10 @@ async function findGameUsingID (id) {
 async function updateGame (document) {
     try {
         const db = await getDB();
-        const games = db.collection("games");
-        await games.updateOne({id: document.id} , { $set : document});
+        const games = db.collection("sgames");
+        const id = document["_id"];
+        delete document["_id"]
+        const res = await games.updateOne({"_id": id} , { $set : document});
     } catch (error) {
         throw new Error(error)
     }
@@ -37,7 +39,7 @@ async function updateGame (document) {
 async function getAllActiveGames (document) {
     try {
         const db = await getDB();
-        const games = db.collection("games");
+        const games = db.collection("sgames");
         return (await games.find({status: "running"}).toArray());
     } catch (error) {
         throw new Error(error)

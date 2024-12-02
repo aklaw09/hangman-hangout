@@ -1,7 +1,15 @@
 const { getDB, connectToDB } = require("../config/db");
 const { getIO } = require("../config/socket");
 const { createGame } = require("../model/game");
-const { authenticRoomPassword, createRoom, getAllActiveRooms, addPlayerToRoom, findRoomUsingId } = require("../model/room");
+const { authenticRoomPassword, createRoom, getAllActiveRooms, addPlayerToRoom, findRoomUsingId, addGameToRoom } = require("../model/room");
+const { broadcastToRoom } = require("./socket");
+
+const gameStates = {
+    "running": "running",
+    "over": "over",
+    "won" : "won"
+}
+
 
 
 async function listCurrent (req, res) {
@@ -21,7 +29,8 @@ async function initialise (req, res) {
             players: [username],
             gameMaster: username,
             password: password,
-            passwordProtected: hasPassword
+            passwordProtected: hasPassword,
+            gameId: null
         }
         document = await createRoom(document);
         res.status(201).json(document);
@@ -50,7 +59,7 @@ async function join (req, res) {
 
 async function start (req, res) {
     try {
-        const DEFAULT_GUESS_LIMIT = 6, RUNNING = 1;
+        const DEFAULT_GUESS_LIMIT = 6;
         let {roomId, systemGenerated, guessLimit, word} = req.body;
         const {username} = req.user;
 
@@ -63,15 +72,13 @@ async function start (req, res) {
         const game = {
             word: word,
             turns: guessLimit,
-            status: RUNNING,
+            status: gameStates.running,
             display: Array(word.length).fill('_').join("")
         }
         await createGame(game);
-        console.log(game);
+        await addGameToRoom(room, game["_id"].toString())
         delete game.word;
-        const io = getIO();
-        io.to(roomId).emit("game:start", game);
-
+        broadcastToRoom(roomId, "room:start", game);
         res.status(201).json(game) 
     } catch (error) {
         console.error(error);

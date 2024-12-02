@@ -22,7 +22,22 @@ async function findRoomUsingId (roomId) {
         delete roomData.password;
         return roomData;
     } catch (error) {
+        console.error(error);
         throw new Error(error);
+    }
+}
+
+async function addGameToRoom (room, gameId) {
+    try {
+        const db = await getDB();
+        const rooms = db.collection("rooms");
+        const objId = ObjectId.createFromHexString(room["_id"])
+        room.gameId = gameId;
+        delete room["_id"]
+        await rooms.updateOne({"_id": objId} , { $set : room});
+        return room;
+    } catch (error) {
+        throw new Error(error)
     }
 }
 
@@ -81,5 +96,6 @@ module.exports = {
     getAllActiveRooms,
     authenticRoomPassword,
     addPlayerToRoom,
-    findRoomUsingId
+    findRoomUsingId,
+    addGameToRoom
 }
