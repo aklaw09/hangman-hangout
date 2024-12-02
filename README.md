@@ -73,6 +73,7 @@ The player can make a guess by sending an event `room:guess` with arguments `roo
 Currently there are no player specific games (due to time restriction), but according to the design following functionalities can be added to this module
 
 1. Each player gets a personal game for the same initial state. A leaderboard can be generated based on the points thus rewarded.
+2. Rotation game master. Each player in the room gets a chance to be the master.
 
 ## Endpoints
 
