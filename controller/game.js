@@ -32,15 +32,17 @@ async function initialise (req, res) {
 
 async function handleGuess (req, res) {
     const {id, guess} = req.body;
-    const {username} = req.body;  
+    const {username} = req.user;  
 
     try {
         const {game, event} = await modifyGameData(id, guess);
+        console.log(game.player, username)
         if(game.player !== username) {
             res.status(401).json({message: "Only the owner can play the game"});
         }
         await updateGame(game);
         delete game.player;
+
         res.status(200).json(game);
         broadcastToRoom(id, `game:${event}`, game);
     } catch (error) {

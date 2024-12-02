@@ -10,6 +10,8 @@ async function modifyGameData (gameId, guess) {
     let correctGuess = false, event = "update";
     const game = await findGameUsingID(gameId);
     console.log(game);
+    if(game.status === gameStates.won) return {game: game, event: "win"};
+    if(game.status === gameStates.over) return {game: game, event: "end"};
     const word = game.word; game.display = game.display.split("");
     for(let i=0; i < word.length; i++) {
         if(word[i] === guess) {
