@@ -12,7 +12,7 @@ async function registerUser(req, res) {
     }
 
     const existingUser = await findUserByUsername(username);
-    if (existingUser.length) {
+    if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
     }
 

@@ -5,7 +5,7 @@ const { findRoomUsingId, addPlayerToRoom, authenticRoomPassword } = require("../
 const { gameCollection, modifyGameData } = require("../util/helper");
 
 async function handleConnection (socket) {
-    console.log("a user connected!", socket.id); 
+    // console.log("a user connected!", socket.id); 
     const {token} = socket.handshake.headers;
     const {username} = await verify(token);
     
@@ -31,6 +31,9 @@ async function handleConnection (socket) {
     })
 
     socket.on("room:guess", async({roomId, guess}) => {
+      if(guess.length > 1) {
+        return socket.emit("ack", "Guess cannot be larger than 1 character")
+      }
       const {gameId} = await findRoomUsingId(roomId);
       const {game, event} = await modifyGameData(gameId, guess, gameCollection.multiplayer);
       await updateGame(game, gameCollection.multiplayer);

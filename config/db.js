@@ -1,6 +1,8 @@
 const { MongoClient } = require('mongodb');
 
-const url = 'mongodb://localhost:27017';
+const DB_HOST = process.env.DB_HOST || "localhost";
+const DB_PORT = process.env.DB_PORT || "27017"
+const url = `mongodb://${DB_HOST}:${DB_PORT}`;
 const client = new MongoClient(url);
 const dbName = 'hangman';
 

@@ -1,3 +1,4 @@
+const { default: axios } = require("axios");
 const { findGameUsingID } = require("../model/game");
 
 const gameStates = {
@@ -41,8 +42,30 @@ async function modifyGameData (gameId, guess, collection) {
     };
 }
 
+async function generateRandomWord () {
+    try {
+        const [word] = (await axios.get("http://random-word-api.herokuapp.com/word")).data;
+        return word
+    } catch (error) {
+        console.error(error);
+        return "test"
+    }
+}
+
+async function validateWord (word) {
+    try {
+        const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
+        const res = (await axios.get(url)).status;
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
 module.exports = {
     modifyGameData,
+    generateRandomWord,
+    validateWord,
     gameCollection,
     gameStates
 };

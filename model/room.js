@@ -81,7 +81,7 @@ async function addPlayerToRoom (id, username) {
             document.players.push(username);
         }
         delete document.password;
-        const res = await rooms.updateOne({"_id" : id}, {"$set" : document});
+        const res = await rooms.updateOne({"_id" : objId}, {"$set" : document});
         return document;
     } catch (error) {
         console.error(error);

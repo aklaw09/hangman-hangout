@@ -1,11 +1,10 @@
 const { createGame, updateGame, getAllActiveGames } = require('../model/game');
-const { gameCollection, modifyGameData, gameStates } = require('../util/helper');
+const { gameCollection, modifyGameData, gameStates, generateRandomWord } = require('../util/helper');
 const { broadcastToRoom } = require('./socket');
 
 async function initialise (req, res) {
-    // const [RandWord] = (await axios.get("http://random-word-api.herokuapp.com/word")).data;
     try {
-        const word = "test";
+        const word = await generateRandomWord();
         const {username} = req.user;
         const game = {
             word: word,
@@ -25,6 +24,7 @@ async function initialise (req, res) {
 
 async function handleGuess (req, res) {
     const {id, guess} = req.body;
+    if(guess.length > 1) return res.status(400).json({message: "Guess cannot be larger than 1 character"})
     const {username} = req.user;  
 
     try {

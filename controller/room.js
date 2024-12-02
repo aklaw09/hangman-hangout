@@ -1,6 +1,6 @@
 const { createGame } = require("../model/game");
 const { createRoom, getAllActiveRooms, findRoomUsingId, addGameToRoom } = require("../model/room");
-const { gameStates, gameCollection } = require("../util/helper");
+const { gameStates, gameCollection, generateRandomWord, validateWord } = require("../util/helper");
 const { broadcastToRoom } = require("./socket");
 
 async function listCurrent (req, res) {
@@ -42,7 +42,11 @@ async function start (req, res) {
         if(gameMaster !== username) {
             return res.status(401).json({message: "Unauthorized! Only the game master can start the game."});
         }
-        if(systemGenerated) word = "test";
+
+        if(systemGenerated.replace(" ", "") == "true") word = await generateRandomWord();
+        else {
+            if(await validateWord(word) === false) return res.status(400).json({message: "Invalid word provided"}) 
+        }
         if(!guessLimit) guessLimit = DEFAULT_GUESS_LIMIT;
         const game = {
             word: word,

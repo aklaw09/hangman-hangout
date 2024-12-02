@@ -1,7 +1,6 @@
 const express = require('express');
 const http = require('http');
 const bodyParser = require('body-parser');
-const socketio = require("socket.io");
 const authRoutes = require('./routes/auth');
 const protectedRoutes = require('./routes/protected');
 const {handleConnection} = require('./controller/socket');
@@ -18,6 +17,6 @@ io.on('connection', handleConnection);
 app.use('/auth', authRoutes);
 app.use('/api', protectedRoutes);
 
-server.listen(8080, () => {
+server.listen(process.env.PORT || 8080, () => {
     console.log("Hangman v1");
 })
