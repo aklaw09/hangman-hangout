@@ -1,13 +1,6 @@
-const { createGame, findGameUsingID, updateGame, getAllActiveGames } = require('../model/sgame');
+const { createGame, updateGame, getAllActiveGames } = require('../model/game');
+const { gameCollection, modifyGameData, gameStates } = require('../util/helper');
 const { broadcastToRoom } = require('./socket');
-const modifyGameData = require("../util/helper");
-
-
-const gameStates = {
-    "running": "running",
-    "over": "over",
-    "won" : "won"
-}
 
 async function initialise (req, res) {
     // const [RandWord] = (await axios.get("http://random-word-api.herokuapp.com/word")).data;
@@ -21,7 +14,7 @@ async function initialise (req, res) {
             display: Array(word.length).fill('_').join(""),
             player: username
         }
-        await createGame(game);
+        await createGame(game, gameCollection.singlePlayer);
         delete game.word;
         res.status(201).json(game) 
     } catch (error) {
@@ -35,12 +28,11 @@ async function handleGuess (req, res) {
     const {username} = req.user;  
 
     try {
-        const {game, event} = await modifyGameData(id, guess);
-        console.log(game.player, username)
+        const {game, event} = await modifyGameData(id, guess, gameCollection.singlePlayer);
         if(game.player !== username) {
             res.status(401).json({message: "Only the owner can play the game"});
         }
-        await updateGame(game);
+        await updateGame(game, gameCollection.singlePlayer);
         delete game.player;
 
         res.status(200).json(game);
@@ -54,7 +46,7 @@ async function handleGuess (req, res) {
 
 async function activeGames (req, res) {
     try {
-        const activeGames = await getAllActiveGames();
+        const activeGames = await getAllActiveGames(gameCollection.singlePlayer);
         for(const game of activeGames) {
             delete game.word;
         }

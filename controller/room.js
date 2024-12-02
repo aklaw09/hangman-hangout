@@ -1,16 +1,7 @@
-const { getDB, connectToDB } = require("../config/db");
-const { getIO } = require("../config/socket");
-const { createGame } = require("../model/mgame");
-const { authenticRoomPassword, createRoom, getAllActiveRooms, addPlayerToRoom, findRoomUsingId, addGameToRoom } = require("../model/room");
+const { createGame } = require("../model/game");
+const { createRoom, getAllActiveRooms, findRoomUsingId, addGameToRoom } = require("../model/room");
+const { gameStates, gameCollection } = require("../util/helper");
 const { broadcastToRoom } = require("./socket");
-
-const gameStates = {
-    "running": "running",
-    "over": "over",
-    "won" : "won"
-}
-
-
 
 async function listCurrent (req, res) {
     try {
@@ -59,8 +50,8 @@ async function start (req, res) {
             status: gameStates.running,
             display: Array(word.length).fill('_').join(""),
         }
-        await createGame(game);
-        await addGameToRoom(room, game["_id"])
+        await createGame(game, gameCollection.multiplayer);
+        await addGameToRoom(room, game["_id"].toString())
         delete game.word;
         broadcastToRoom(roomId, "room:start", game);
         res.status(201).json(game) 

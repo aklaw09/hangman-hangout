@@ -61,7 +61,6 @@ async function authenticRoomPassword (id, password) {
         const rooms = db.collection("rooms");
         const objId = ObjectId.createFromHexString(id)
         const room = (await rooms.find({"_id": objId}).toArray())[0];
-        console.log(room.password, password)
         if(room.password === password ) {
             return true;
         } else {
@@ -83,7 +82,6 @@ async function addPlayerToRoom (id, username) {
         }
         delete document.password;
         const res = await rooms.updateOne({"_id" : id}, {"$set" : document});
-        console.log(res);
         return document;
     } catch (error) {
         console.error(error);

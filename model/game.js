@@ -1,10 +1,10 @@
 const { ObjectId } = require("mongodb");
 const { getDB } = require("../config/db");
 
-async function createGame (document) {
+async function createGame (document, collection) {
     try {
         const db = await getDB();
-        const games = db.collection("mgames");
+        const games = db.collection(collection);
         const res = await games.insertOne(document);
         return res.insertedId.toString();
     } catch (error) {
@@ -12,10 +12,10 @@ async function createGame (document) {
     }
 }
 
-async function findGameUsingID (id) {
+async function findGameUsingID (id, collection) {
     try {
         const db = await getDB();
-        const games = db.collection("mgames");
+        const games = db.collection(collection);
         const objId = ObjectId.createFromHexString(id)
         const game = (await games.find({"_id": objId}).toArray())[0];
         return game;
@@ -24,10 +24,10 @@ async function findGameUsingID (id) {
     }
 }
 
-async function updateGame (document) {
+async function updateGame (document, collection) {
     try {
         const db = await getDB();
-        const games = db.collection("mgames");
+        const games = db.collection(collection);
         const id = document["_id"];
         delete document["_id"]
         const res = await games.updateOne({"_id": id} , { $set : document});
@@ -36,10 +36,10 @@ async function updateGame (document) {
     }
 }
 
-async function getAllActiveGames () {
+async function getAllActiveGames (collection) {
     try {
         const db = await getDB();
-        const games = db.collection("mgames");
+        const games = db.collection(collection);
         return (await games.find({status: "running"}).toArray());
     } catch (error) {
         throw new Error(error)

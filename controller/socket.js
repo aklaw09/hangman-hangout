@@ -1,8 +1,8 @@
 const { verify } = require("../auth/auth");
 const { getIO } = require("../config/socket");
-const { findGameUsingID } = require("../model/sgame");
+const { findGameUsingID, updateGame } = require("../model/game");
 const { findRoomUsingId, addPlayerToRoom, authenticRoomPassword } = require("../model/room");
-const modifyGameData = require("../util/helper");
+const { gameCollection, modifyGameData } = require("../util/helper");
 
 async function handleConnection (socket) {
     console.log("a user connected!", socket.id); 
@@ -11,15 +11,15 @@ async function handleConnection (socket) {
     
     socket.on('watch:game', async({id}) => {
       socket.join(id.toString());
-      const game = await findGameUsingID(id);
+      const game = await findGameUsingID(id, gameCollection.singlePlayer);
       socket.emit("ack", game)
     })
 
-    socket.on("join:room", async({id, password}) => {
+    socket.on("join:room", async({roomId, password}) => {
       try {
-        if(await authenticRoomPassword(id, password)) {
-          const document = await addPlayerToRoom(id, username);
-          socket.join(id);
+        if(await authenticRoomPassword(roomId, password)) {
+          const document = await addPlayerToRoom(roomId, username);
+          socket.join(roomId);
           socket.emit("ack", document);
         } else {
           socket.emit("ack", "Unauthorized! Incorrect room credentials");
@@ -30,10 +30,10 @@ async function handleConnection (socket) {
       }
     })
 
-    socket.on("room:guess", async({id, guess}) => {
-      const {gameId} = await findRoomUsingId(id);
-      console.log(gameId);
-      const {game, event} = await modifyGameData(gameId, guess);
+    socket.on("room:guess", async({roomId, guess}) => {
+      const {gameId} = await findRoomUsingId(roomId);
+      const {game, event} = await modifyGameData(gameId, guess, gameCollection.multiplayer);
+      await updateGame(game, gameCollection.multiplayer);
       broadcastToRoom(roomId, `room:${event}`, game);
     })
 
