@@ -1,6 +1,6 @@
 const { getDB, connectToDB } = require("../config/db");
 const { getIO } = require("../config/socket");
-const { createGame } = require("../model/game");
+const { createGame } = require("../model/mgame");
 const { authenticRoomPassword, createRoom, getAllActiveRooms, addPlayerToRoom, findRoomUsingId, addGameToRoom } = require("../model/room");
 const { broadcastToRoom } = require("./socket");
 
@@ -27,7 +27,7 @@ async function initialise (req, res) {
         const {username} = req.user;
         let document = {
             players: [username],
-            gameMaster: username,
+            gameMaster: 0,
             password: password,
             passwordProtected: hasPassword,
             gameId: null
@@ -64,7 +64,8 @@ async function start (req, res) {
         const {username} = req.user;
 
         const room = await findRoomUsingId(roomId);
-        if(room.gameMaster !== username) {
+        const gameMaster = room.players[room.gameMaster];
+        if(gameMaster !== username) {
             return res.status(401).json({message: "Unauthorized! Only the game master can start the game."});
         }
         if(systemGenerated) word = "test";
@@ -73,10 +74,10 @@ async function start (req, res) {
             word: word,
             turns: guessLimit,
             status: gameStates.running,
-            display: Array(word.length).fill('_').join("")
+            display: Array(word.length).fill('_').join(""),
         }
         await createGame(game);
-        await addGameToRoom(room, game["_id"].toString())
+        await addGameToRoom(room, game["_id"])
         delete game.word;
         broadcastToRoom(roomId, "room:start", game);
         res.status(201).json(game) 

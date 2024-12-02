@@ -1,4 +1,4 @@
-const { findGameUsingID } = require("../model/game");
+const { findGameUsingID } = require("../model/sgame");
 
 const gameStates = {
     "running": "running",

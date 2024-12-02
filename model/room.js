@@ -31,10 +31,10 @@ async function addGameToRoom (room, gameId) {
     try {
         const db = await getDB();
         const rooms = db.collection("rooms");
-        const objId = ObjectId.createFromHexString(room["_id"])
         room.gameId = gameId;
+        const id = room["_id"];
         delete room["_id"]
-        await rooms.updateOne({"_id": objId} , { $set : room});
+        await rooms.updateOne({"_id": id} , { $set : room});
         return room;
     } catch (error) {
         throw new Error(error)

@@ -1,4 +1,4 @@
-const { createGame, findGameUsingID, updateGame, getAllActiveGames } = require('../model/game');
+const { createGame, findGameUsingID, updateGame, getAllActiveGames } = require('../model/sgame');
 const { broadcastToRoom } = require('./socket');
 const modifyGameData = require("../util/helper");
 

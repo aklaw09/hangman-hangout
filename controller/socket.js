@@ -1,6 +1,6 @@
 const { verify } = require("../auth/auth");
 const { getIO } = require("../config/socket");
-const { findGameUsingID } = require("../model/game");
+const { findGameUsingID } = require("../model/sgame");
 const { findRoomUsingId, addPlayerToRoom, authenticRoomPassword } = require("../model/room");
 const modifyGameData = require("../util/helper");
 
